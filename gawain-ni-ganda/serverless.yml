@@ -1,0 +1,65 @@
+service: gawain-ni-ganda
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  lambdaHashingVersion: '20201221'
+  region: ap-southeast-2
+  profile: personal  
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action: "dynamodb:*"
+      Resource: "*"
+  environment:
+    DYNAMODB_CARDS_TABLE_NAME: gawain-ni-ganda-db
+
+functions:
+  createTask:
+    handler: handler.create_task
+    events:
+      - http:
+          path: /task
+          method: post
+  listTask:
+    handler: handler.list_task
+    events:
+      - http:
+          path: /task
+          method: get
+  getTask:
+    handler: handler.get_task
+    events:
+      - http:
+          path: /task/{task_id}
+          method: get
+  updateTask:
+    handler: handler.update_task
+    events:
+      - http:
+          path: /task/{task_id}
+          method: patch
+  deleteTask:
+    handler: handler.delete_task
+    events:
+      - http:
+          path: /task/{task_id}
+          method: delete
+
+package:
+  exclude:
+    - venv/**
+    - node_modules/**
+resources:
+  Resources:
+    GawainNiGandaDynamodbTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: task_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: task_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.DYNAMODB_CARDS_TABLE_NAME}
